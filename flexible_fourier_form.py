@@ -5,9 +5,6 @@ from statsmodels.formula.api import ols
 
 
 
-
-
-
 def flexible_fourier_form(
     data: pd.DataFrame, 
     criteria: str, 
@@ -63,6 +60,23 @@ def flexible_fourier_form(
     
     match vol_estimation:
         case "variance":
+            
+            dzienne_zwroty_log = data.query('TIME >= 90000 and TIME <= 165000') # to be moved  
+            # pierwszy OPEN w dniu
+            daily_open = dzienne_zwroty_log.groupby('DATE')['OPEN'].first()
+
+            # ostatni CLOSE w dniu
+            daily_close = dzienne_zwroty_log.groupby('DATE')['CLOSE'].last()
+
+            # dzienne log-stopy (open → close)
+            log_return_daily = np.log(daily_close) - np.log(daily_open)
+
+            # odchylenie standardowe
+            std_daily = log_return_daily.var(ddof=1) # nie std ale var
+
+                        
+                        
+            
             pass
         case "garch":
             pass
@@ -85,6 +99,27 @@ def flexible_fourier_form(
 
 
     response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # oblcizenie zmiennej objasnianej y // returns -R_bar 
+    
+    data['n'] = data.groupby('DATE').cumcount() + 1
+
+    data['n^2'] = data['n'] **2
+    
+    
+    data['linear'] = data['n'] / N_1 # trend liniiowy
+
+    data['qube'] = data['n^2'] / N_2 # trend kwadratowy  
+    
+    data['y'] = response
+    
+    from math import pi
+
+    # obliczanie par sinusów i cosinusów 
+    for p in range(1,11):
+        data[f'sinus_{p}'] = np.sin(2*pi*p*data['n']/N) 
+        data[f'cosinus_{p}'] = np.cos(2*pi*p*data['n']/N) 
+
+ 
+    # choose appropriate criteria for model selection based on the input parameter
         
     aic_list = []
     bic_list = []
@@ -107,8 +142,22 @@ def flexible_fourier_form(
     model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
     
     
+    # normalisation
     
+    g = np.exp(binary_df['estimated_var'] / 2)
+
+    TN = len(g)
+
+    binary_df['s_hat'] = TN * g / g.sum()
+
+
+    binary_df['s_hat'].mean()
+
+    binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat'] 
         
+        
+        
+            
         
 
 
