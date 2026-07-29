@@ -5,6 +5,10 @@ from statsmodels.formula.api import ols
 
 
 
+fdt =pd.read_csv("total_data_shifted.csv",sep=";") 
+
+
+
 def flexible_fourier_form(
     data: pd.DataFrame, 
     criteria: str, 
