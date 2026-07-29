@@ -5,19 +5,31 @@ from statsmodels.formula.api import ols
 
 
 
-def flexible_fourier_form(data: pd.DataFrame, N: int, criteria: str, vol_estimation: str, days: list, plots: bool,session_thresholds:list):
-    """ This function is a placeholder for the flexible Fourier form implementation. It is intended 
+def flexible_fourier_form(
+    data: pd.DataFrame, 
+    criteria: str, 
+    vol_estimation: str, 
+    days: list, 
+    plots: bool,
+    session_thresholds:list, 
+    N: int = None):
+    
+    
+    """ 
+    
+    This function is a placeholder for the flexible Fourier form implementation. It is intended 
     to be developed further.    
+    
+    implementation is based on the paper "Andersen T.G., Bollerslev T. (1997), Intraday periodicity and volatility persistence in financial markets, "Journal of Empirical Finance", vol. 4, no. 2-3." 
+    DOI : "10.1016/S0927-5398(97)00004-2"
+    
     
     """
     
-    data = data.query('TIME >= 90000 and TIME <= 165000') # wziąłem 9:05 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
+    data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}') # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
     # log stopy zwrotu w obrębie dnia
-    data['log_return_intraday'] = (
-        data.groupby('DATE')['CLOSE']
-        .transform(lambda x: np.log(x).diff()) 
-    )
+    data['log_return_intraday'] = ( data.groupby('DATE')['CLOSE'].transform(lambda x: np.log(x).diff()))
 
     data = data.dropna(subset=['log_return_intraday'])
     data['abs_zwroty'] = np.abs(data['log_return_intraday'])
@@ -26,7 +38,7 @@ def flexible_fourier_form(data: pd.DataFrame, N: int, criteria: str, vol_estimat
     #print("number of rows:", len(data))
     #print(data.groupby('DATE').size().value_counts().sort_index())
         
-        data['DATE'] =pd.to_datetime(data['DATE'],format='%Y%m%d')
+    data['DATE'] =pd.to_datetime(data['DATE'],format='%Y%m%d')
         
     
     data['dni_tygodnia'] =data['DATE'].dt.day_name()
@@ -42,6 +54,24 @@ def flexible_fourier_form(data: pd.DataFrame, N: int, criteria: str, vol_estimat
         
     returns = data['log_return_intraday'] ## stare returns = data['log_return_intraday']
 
+    # here based on the vol_estimation parameter, we can choose different methods to estimate volatility , to be implemented match case statement 
+    
+    
+    match vol_estimation:
+        case "variance":
+            pass
+        case "garch":
+            pass
+        case "egarch":
+            pass
+        case "aparch":
+            pass
+        case _:
+            raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
+        
+     
+     
+    
     sigma_hat = std_daily # 13110
 
 
@@ -74,12 +104,11 @@ def flexible_fourier_form(data: pd.DataFrame, N: int, criteria: str, vol_estimat
         aic_list.append([model.aic,x])
         bic_list.append([model.bic,x])
     
-    model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(binary_df.shape[0]/100)**(2/9)  ) })
-        
-        
+    model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
     
-    pass
-
-
+    
+    
+        
+        
 
 
