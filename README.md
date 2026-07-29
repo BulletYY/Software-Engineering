@@ -6,7 +6,7 @@ The implementation is based on the following paper:
 
 > Andersen, T. G. & Bollerslev, T. (1997).  
 > *Intraday Periodicity and Volatility Persistence in Financial Markets*.  
-> Journal of Empirical Finance, 4(2–3).  
+> Journal of Empirical Finance, 4(2-3).  
 > DOI: `10.1016/S0927-5398(97)00004-2`
 
 ## Project Structure
@@ -19,10 +19,10 @@ Software-Engineering/
 └── README.md
 ```
 
-- `flexible_fourier_form.py` — contains the Flexible Fourier Form implementation.
-- `main.py` — contains an example of how to import and use the function.
-- `.gitignore` — specifies files and directories that should not be tracked by Git.
-- `README.md` — contains the project documentation.
+- `flexible_fourier_form.py` - contains the Flexible Fourier Form implementation.
+- `main.py` - contains an example of how to import and use the function.
+- `.gitignore` - specifies files and directories that should not be tracked by Git.
+- `README.md` - contains the project documentation.
 
 ## Main Function
 
