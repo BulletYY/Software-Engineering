@@ -5,7 +5,6 @@ from statsmodels.formula.api import ols
 
 
 
-fdt =pd.read_csv("total_data_shifted.csv",sep=";") 
 
 
 
@@ -25,6 +24,7 @@ def flexible_fourier_form(
     to be developed further.    
     
     implementation is based on the paper "Andersen T.G., Bollerslev T. (1997), Intraday periodicity and volatility persistence in financial markets, "Journal of Empirical Finance", vol. 4, no. 2-3." 
+    
     DOI : "10.1016/S0927-5398(97)00004-2"
     
     
@@ -84,11 +84,7 @@ def flexible_fourier_form(
     returns_centered = returns - data["R_bar_n"]
 
 
-
-
     response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # oblcizenie zmiennej objasnianej y // returns -R_bar 
-
-    
         
     aic_list = []
     bic_list = []
