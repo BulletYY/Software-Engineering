@@ -47,5 +47,5 @@ flexible_fourier_form(
 | `vol_estimation` | `str` | Volatility estimation method. Planned values include `variance`, `garch`, `egarch`, and `aparch`. |
 | `days` | `list` | List of weekdays or trading days included in the analysis. |
 | `plots` | `bool` | Determines whether plots should be generated. |
-| `session_thresholds` | `list` | Start and end times of the analyzed trading session, for example `[900, 1650]`. |
+| `session_thresholds` | `list` | Start and end times of the analyzed trading session, for example `[90000, 165000]`. |
 | `N` | `int`, optional | Number of intraday observations within one trading session. |
