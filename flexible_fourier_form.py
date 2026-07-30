@@ -129,7 +129,6 @@ def flexible_fourier_form(
     
     return [model2.summary(), binary_df]
     
-    
     """    
     match vol_estimation:
         case "variance":
