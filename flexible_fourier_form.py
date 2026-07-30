@@ -84,7 +84,7 @@ def flexible_fourier_form(
     
     binary_df = pd.concat([pd.get_dummies(data['DATE'].dt.day_name(),columns=['DATE']),data],axis=1)
     
-  
+    binary_df.loc[:,['Monday','Tuesday','Wednesday','Thursday','Friday']] = binary_df.loc[:,['Monday','Tuesday','Wednesday','Thursday','Friday']].astype(int)
     
     # choose appropriate criteria to find optimal pair of sin and cos 
     aic_list = []
@@ -92,7 +92,7 @@ def flexible_fourier_form(
 
     for p in range(1,11):
         x=p
-        expression = f"y~linear+qube+Friday+Monday+Thursday+Tuesday+"
+        expression = f"y~linear+qube+Wednesday+Monday+Thursday+Tuesday+"
         while p >0:
             expression+= f"sin_{p}"+"+"+f"cosine_{p}+"
             p-=1

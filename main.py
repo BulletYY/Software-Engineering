@@ -19,4 +19,6 @@ fdt['sesja'] = pd.to_datetime(fdt['TIME'].astype(
 zwrotka, df = flexible_fourier_form( fdt, "dasd", "nic", ['raz', 'dwa'], True, ['90000', '165000'])
 
 
+print(zwrotka)
+
 
