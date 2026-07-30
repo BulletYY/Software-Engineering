@@ -1,7 +1,4 @@
-import numpy as np
 import pandas as pd
-import seaborn as sns
-from statsmodels.formula.api import ols 
 
 
 
@@ -13,8 +10,6 @@ def flexible_fourier_form(
     plots: bool,
     session_thresholds:list, 
     N: int = None):
-    
-    
     """ 
     
     This function is a placeholder for the flexible Fourier form implementation. It is intended 
@@ -26,6 +21,24 @@ def flexible_fourier_form(
     
     
     """
+    import numpy as np
+    import pandas as pd
+    from statsmodels.formula.api import ols 
+    
+    
+    daily_returns_log = data.query('TIME >= 90000 and TIME <= 165000')  
+    
+    daily_open = daily_returns_log.groupby('DATE')['OPEN'].first()
+
+    daily_close = daily_returns_log.groupby('DATE')['CLOSE'].last()
+
+    log_return_daily = np.log(daily_close) - np.log(daily_open)
+
+    std_daily = log_return_daily.var(ddof=1) # nie std ale var
+
+    print(std_daily)
+
+        
     
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}') # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
@@ -33,18 +46,14 @@ def flexible_fourier_form(
     data['log_return_intraday'] = ( data.groupby('DATE')['CLOSE'].transform(lambda x: np.log(x).diff()))
 
     data = data.dropna(subset=['log_return_intraday'])
-    data['abs_zwroty'] = np.abs(data['log_return_intraday'])
 
-    #print("number of days:", data['DATE'].nunique())
-    #print("number of rows:", len(data))
-    #print(data.groupby('DATE').size().value_counts().sort_index())
-        
     data['DATE'] =pd.to_datetime(data['DATE'],format='%Y%m%d')
         
-    
     data['dni_tygodnia'] =data['DATE'].dt.day_name()
+    
+    print(data)
         
-    #
+    """
     N = 92 # ilosc 
 
     N_1 = (N+1) /2  # bezposrednio z ksiazki prof gurg i wojtow
@@ -153,7 +162,8 @@ def flexible_fourier_form(
 
     binary_df['s_hat'].mean()
 
-    binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat'] 
+    binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
+""" 
         
         
         
