@@ -76,14 +76,15 @@ def flexible_fourier_form(
     
     data['y'] = response
     
-    # 
     for p in range(1,11):
         data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
         data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
-        
+            
     
-    print(data)
-    """
+    binary_df = pd.concat([pd.get_dummies(data['DATE'].dt.day_name(),columns=['DATE']),data],axis=1)
+    
+  
+    
     # choose appropriate criteria to find optimal pair of sin and cos 
     aic_list = []
     bic_list = []
@@ -92,13 +93,13 @@ def flexible_fourier_form(
         x=p
         expression = f"y~linear+qube+Friday+Monday+Thursday+Tuesday+"
         while p >0:
-            expression+= f"sinus_{p}"+"+"+f"cosinus_{p}+"
+            expression+= f"sin_{p}"+"+"+f"cosine_{p}+"
             p-=1
 
         expression =expression.rstrip("+")
         print(expression)
 
-        model = ols(expression,data=data).fit()
+        model = ols(expression,data=binary_df).fit()
         aic_list.append([model.aic,x])
         bic_list.append([model.bic,x])
     
@@ -106,7 +107,7 @@ def flexible_fourier_form(
     
     #model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
     
-    
+    """    
     # normalisation
     
     g = np.exp(binary_df['estimated_var'] / 2)
@@ -151,7 +152,7 @@ def flexible_fourier_form(
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
             
-""" 
+    """ 
         
         
         
