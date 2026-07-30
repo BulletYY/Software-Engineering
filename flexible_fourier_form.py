@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.formula.api import ols 
 from math import pi
+import matplotlib.pyplot as plt
 
 
 
@@ -105,9 +106,10 @@ def flexible_fourier_form(
     
     
     
-    #model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
+    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(binary_df.shape[0]/100)**(2/9)  ) })
     
-    """    
+    binary_df['estimated_var'] =model2.fittedvalues
+
     # normalisation
     
     g = np.exp(binary_df['estimated_var'] / 2)
@@ -121,8 +123,14 @@ def flexible_fourier_form(
 
     binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
     
+    binary_df.groupby('sesja')['s_hat'].mean().plot()
+
+    plt.show()
+    
+    return [model2.summary(), binary_df]
     
     
+    """    
     match vol_estimation:
         case "variance":
             
