@@ -64,7 +64,7 @@ def flexible_fourier_form(
 
     data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean")
 
-    returns_centered = data['log_return_intraday']   - data["R_bar_n"]
+    returns_centered = data['log_return_intraday'] - data["R_bar_n"]
 
     response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # response variable 
     
@@ -121,7 +121,7 @@ def flexible_fourier_form(
     
     binary_df['estimated_var'] =model2.fittedvalues
 
-    # normalisation
+    # normalization of the estimated seasonality of variance to get the seasonal component
     
     g = np.exp(binary_df['estimated_var'] / 2)
 
@@ -129,15 +129,14 @@ def flexible_fourier_form(
 
     binary_df['s_hat'] = TN * g / g.sum()
 
-
     binary_df['s_hat'].mean()
 
     binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
     
     binary_df.groupby('sesja')['s_hat'].mean().plot()
-
-    plt.show()
     
+    plt.show()
+
     return [model2.summary(), binary_df]
     
     """    
