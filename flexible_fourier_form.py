@@ -147,9 +147,6 @@ def flexible_fourier_form(
             # odchylenie standardowe
             std_daily = log_return_daily.var(ddof=1) # nie std ale var
 
-                        
-                        
-            
             pass
         case "garch":
             pass
