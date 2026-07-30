@@ -48,4 +48,4 @@ flexible_fourier_form(
 | `days` | `list` | List of weekdays or trading days included in the analysis. |
 | `plots` | `bool` | Determines whether plots should be generated. |
 | `session_thresholds` | `list` | Start and end times of the analyzed trading session, for example `[900, 1650]`. |
-| `N` | `int`, optional | Number of intraday observations within one trading session. |
+| `N` | `int`, optional | Number of intraday observations within one trading session |
