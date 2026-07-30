@@ -15,8 +15,7 @@ fdt["TIME"] = fdt["TIME_dt"].dt.strftime("%H%M%S").astype(int)
 fdt['sesja'] = pd.to_datetime( fdt['TIME'].astype(str).str.zfill(6),format='%H%M%S' ).dt.time
 
 
-print(fdt)
 
-#returns = flexible_fourier_form()
+flexible_fourier_form(fdt,"dasd","nic",['raz','dwa'],True,['90000','165000'])
 
 

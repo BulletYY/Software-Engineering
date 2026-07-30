@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+from statsmodels.formula.api import ols 
+from math import pi
 
 
 
@@ -21,10 +24,6 @@ def flexible_fourier_form(
     
     
     """
-    import numpy as np
-    import pandas as pd
-    from statsmodels.formula.api import ols 
-    
     
     daily_returns_log = data.query('TIME >= 90000 and TIME <= 165000')  
     
@@ -36,10 +35,6 @@ def flexible_fourier_form(
 
     std_daily = log_return_daily.var(ddof=1) # nie std ale var
 
-    print(std_daily)
-
-        
-    
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}') # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
     # log stopy zwrotu w obrębie dnia
@@ -51,20 +46,80 @@ def flexible_fourier_form(
         
     data['dni_tygodnia'] =data['DATE'].dt.day_name()
     
-    print(data)
-        
-    """
+    # variables computation        
+
     N = 92 # ilosc 
 
-    N_1 = (N+1) /2  # bezposrednio z ksiazki prof gurg i wojtow
+    N_1 = (N+1) /2   
 
-    N_2 = (N + 1) * (2*N + 1) / 6  #(N+1)*(N+2)/6 # bezposrednio z ksiazki prof gurg i wojtow
+    N_2 = (N + 1) * (2*N + 1) / 6  # or (N+1)*(N+2)/6  
 
-    R_bar = data['log_return_intraday'].mean() ## R_bar = data['log_return_intraday'].mean() stare 
+    R_bar = data['log_return_intraday'].mean()   
         
-    returns = data['log_return_intraday'] ## stare returns = data['log_return_intraday']
-
     # here based on the vol_estimation parameter, we can choose different methods to estimate volatility , to be implemented match case statement 
+    
+    sigma_hat = std_daily # 13110
+
+    data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean")
+
+    returns_centered = data['log_return_intraday']   - data["R_bar_n"]
+
+    response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # response variable 
+    
+    data['n'] = data.groupby('DATE').cumcount() +1 
+    
+    data['n^2'] = data['n'] **2
+    
+    data['linear'] = data['n'] / N_1 # trend liniiowy
+
+    data['qube'] = data['n^2'] / N_2 # trend kwadratowy  
+    
+    data['y'] = response
+    
+    # 
+    for p in range(1,11):
+        data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
+        data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
+        
+    
+    print(data)
+    """
+    # choose appropriate criteria to find optimal pair of sin and cos 
+    aic_list = []
+    bic_list = []
+
+    for p in range(1,11):
+        x=p
+        expression = f"y~linear+qube+Friday+Monday+Thursday+Tuesday+"
+        while p >0:
+            expression+= f"sinus_{p}"+"+"+f"cosinus_{p}+"
+            p-=1
+
+        expression =expression.rstrip("+")
+        print(expression)
+
+        model = ols(expression,data=data).fit()
+        aic_list.append([model.aic,x])
+        bic_list.append([model.bic,x])
+    
+    
+    
+    #model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
+    
+    
+    # normalisation
+    
+    g = np.exp(binary_df['estimated_var'] / 2)
+
+    TN = len(g)
+
+    binary_df['s_hat'] = TN * g / g.sum()
+
+
+    binary_df['s_hat'].mean()
+
+    binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
+    
     
     
     match vol_estimation:
@@ -95,74 +150,7 @@ def flexible_fourier_form(
             pass
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
-        
-     
-     
-    
-    sigma_hat = std_daily # 13110
-
-
-    data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean")
-
-    returns_centered = returns - data["R_bar_n"]
-
-
-    response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # oblcizenie zmiennej objasnianej y // returns -R_bar 
-    
-    data['n'] = data.groupby('DATE').cumcount() + 1
-
-    data['n^2'] = data['n'] **2
-    
-    
-    data['linear'] = data['n'] / N_1 # trend liniiowy
-
-    data['qube'] = data['n^2'] / N_2 # trend kwadratowy  
-    
-    data['y'] = response
-    
-    from math import pi
-
-    # obliczanie par sinusów i cosinusów 
-    for p in range(1,11):
-        data[f'sinus_{p}'] = np.sin(2*pi*p*data['n']/N) 
-        data[f'cosinus_{p}'] = np.cos(2*pi*p*data['n']/N) 
-
- 
-    # choose appropriate criteria for model selection based on the input parameter
-        
-    aic_list = []
-    bic_list = []
-
-    # while i dodawac dp espression += dopóki p ==0 i odejmowac z kazdym while 
-    for p in range(1,11):
-        x=p
-        expression = f"y~linear+qube+Friday+Monday+Thursday+Tuesday+"
-        while p >0:
-            expression+= f"sinus_{p}"+"+"+f"cosinus_{p}+"
-            p-=1
-
-        expression =expression.rstrip("+")
-        print(expression)
-
-        model = ols(expression,data=data).fit()
-        aic_list.append([model.aic,x])
-        bic_list.append([model.bic,x])
-    
-    model2 = ols("y~linear+qube+sinus_1+cosinus_1+Wednesday+Monday+Thursday+Tuesday   ",data=data).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(data.shape[0]/100)**(2/9)  ) })
-    
-    
-    # normalisation
-    
-    g = np.exp(binary_df['estimated_var'] / 2)
-
-    TN = len(g)
-
-    binary_df['s_hat'] = TN * g / g.sum()
-
-
-    binary_df['s_hat'].mean()
-
-    binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
+            
 """ 
         
         
