@@ -13,6 +13,7 @@ def flexible_fourier_form(
     days: list, 
     plots: bool,
     session_thresholds:list, 
+    max_lags_kernel :str='bartlett',
     N: int = None):
     """ 
     
@@ -103,10 +104,20 @@ def flexible_fourier_form(
         model = ols(expression,data=binary_df).fit()
         aic_list.append([model.aic,x])
         bic_list.append([model.bic,x])
+        
+    
+    
+    match max_lags_kernel:
+        case "bartlett":
+            kernel = int( 4*(binary_df.shape[0]/100)**(2/9)  ) 
+        case "other":
+            pass
+        case _:
+            raise Exception("Invalid max_lags_kernel parameter. Choose from 'bartlett' or 'other'.") # initial idea 
     
     
     
-    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": int( 4*(binary_df.shape[0]/100)**(2/9)  ) })
+    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel })
     
     binary_df['estimated_var'] =model2.fittedvalues
 
