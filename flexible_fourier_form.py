@@ -171,11 +171,11 @@ def flexible_fourier_form(
     expression_model = f"y~linear+qube+sin_1+cosine_1+" 
 
     
-    if not days:
-        expression_model_2 = expression_model+f"{days[0]}+{days[1]}+{days[2]}+{days[3]}"
+    if days:
+        expression_model += f"{days[0]} + {days[1]} + {days[2]} + {days[3]}"
     
     
-    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel })
+    model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
     
     binary_df['estimated_var'] =model2.fittedvalues
 
@@ -194,6 +194,8 @@ def flexible_fourier_form(
     binary_df.groupby('sesja')['s_hat'].mean().plot()
     
     plt.show()
+    
+    
     
     
     return [model2.summary(), binary_df]
