@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pandas as pd
 import numpy as np
 from statsmodels.formula.api import ols 
@@ -14,7 +16,8 @@ def flexible_fourier_form(
     plots: bool,
     session_thresholds:list, 
     max_lags_kernel :str='bartlett',
-    N: int = None):
+    N: int = None,
+    verbose:bool=False)->Tuple:
     """ 
     
     This function is a placeholder for the flexible Fourier form implementation. It is intended 
@@ -90,9 +93,7 @@ def flexible_fourier_form(
                 
             data["sigma_hat"] = data["DATE"].map(std_daily)
     
-            
-            pass
-        case "aparch":
+        case "aparch": # and other models to be aded 
             pass
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
@@ -135,13 +136,29 @@ def flexible_fourier_form(
             p-=1
 
         expression =expression.rstrip("+")
-        print(expression)
 
         model = ols(expression,data=binary_df).fit()
-        aic_list.append([model.aic,x])
-        bic_list.append([model.bic,x])
+        aic_list.append(model.aic)
+        bic_list.append(model.bic)
         
+    print("\n")
+    print("---"*60)
+    print("AIC list:", aic_list.index(min(aic_list))+1)
+    print("BIC list:", bic_list.index(min(bic_list))+1)
+    print("---"*60)
+    print("\n")
     
+    
+    if criteria == "AIC":
+        optimal_pair_aic = aic_list.index(min(aic_list))+1 
+    elif criteria == "BIC":
+        optimal_pair_bic = bic_list.index(min(bic_list))+1
+    else :
+        raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
+    
+    # HERE SHOULD BE ADDED THE LOOP WHICH CREATES SIN AND COS  
+    
+
     match max_lags_kernel:
         case "bartlett":
             kernel = int( 4*(binary_df.shape[0]/100)**(2/9)  ) 
