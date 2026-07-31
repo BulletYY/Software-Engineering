@@ -65,10 +65,32 @@ def flexible_fourier_form(
         case "variance":
             # odchylenie standardowe
             std_daily = log_return_daily.var(ddof=1) # nie std ale var
+            
+            data['sigma_hat']= std_daily
 
         case "garch":
-            pass
+            std_daily = arch_model(log_return_daily, 
+                                   vol='GARCH', 
+                                   dist='t',
+                                   p=1, 
+                                   q=1
+                                   ).fit(disp="off").conditional_volatility.to_dict()
+            
+            data["sigma_hat"] = data["DATE"].map(std_daily)
+            
         case "egarch":
+            
+            std_daily = arch_model(log_return_daily, 
+                                        vol='EGARCH', 
+                                        dist='t',
+                                        p=1,
+                                        o=1, 
+                                        q=1
+                                        ).fit(disp="off").conditional_volatility.to_dict()
+                
+            data["sigma_hat"] = data["DATE"].map(std_daily)
+    
+            
             pass
         case "aparch":
             pass
@@ -76,13 +98,11 @@ def flexible_fourier_form(
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
             
 
-    sigma_hat = std_daily # 13110
-
     data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
 
     returns_centered = data['log_return_intraday'] - data["R_bar_n"]
 
-    response = 2*np.log(np.abs(returns_centered) / (sigma_hat / np.sqrt(N) ))  # response variable 
+    response = 2*np.log(np.abs(returns_centered) / (data['sigma_hat'] / np.sqrt(N) ))  # response variable 
     
     data['n'] = data.groupby('DATE').cumcount() +1 
     
@@ -151,8 +171,6 @@ def flexible_fourier_form(
     
     plt.show()
     
-   
-    """ """    
     
     return [model2.summary(), binary_df]
         
