@@ -3,7 +3,7 @@ import numpy as np
 from statsmodels.formula.api import ols 
 from math import pi
 import matplotlib.pyplot as plt
-
+from arch import arch_model
 
 
 def flexible_fourier_form(
