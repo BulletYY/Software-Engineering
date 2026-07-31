@@ -115,10 +115,7 @@ def flexible_fourier_form(
     
     data['y'] = response
     
-    for p in range(1,11):
-        data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
-        data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
-            
+  
     
     binary_df = pd.concat([pd.get_dummies(data['DATE'].dt.day_name(),columns=['DATE']),data],axis=1)
     
@@ -150,15 +147,18 @@ def flexible_fourier_form(
     
     
     if criteria == "AIC":
-        optimal_pair_aic = aic_list.index(min(aic_list))+1 
+        optimal_pair = aic_list.index(min(aic_list))+1 
     elif criteria == "BIC":
-        optimal_pair_bic = bic_list.index(min(bic_list))+1
+        optimal_pair = bic_list.index(min(bic_list))+1
     else :
         raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
     
+    for p in range(1,optimal_pair+1):
+        data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
+        data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
+            
     # HERE SHOULD BE ADDED THE LOOP WHICH CREATES SIN AND COS  
     
-
     match max_lags_kernel:
         case "bartlett":
             kernel = int( 4*(binary_df.shape[0]/100)**(2/9)  ) 
