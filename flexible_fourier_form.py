@@ -27,16 +27,6 @@ def flexible_fourier_form(
     
     """
     
-    daily_returns_log = data.query('TIME >= 90000 and TIME <= 165000')  
-    
-    daily_open = daily_returns_log.groupby('DATE')['OPEN'].first()
-
-    daily_close = daily_returns_log.groupby('DATE')['CLOSE'].last()
-
-    log_return_daily = np.log(daily_close) - np.log(daily_open)
-
-    std_daily = log_return_daily.var(ddof=1) # nie std ale var
-
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}') # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
     # log stopy zwrotu w obrębie dnia
@@ -55,14 +45,40 @@ def flexible_fourier_form(
     N_1 = (N+1) /2   
 
     N_2 = (N + 1) * (2*N + 1) / 6  # or (N+1)*(N+2)/6  
-
-    R_bar = data['log_return_intraday'].mean()   
         
     # here based on the vol_estimation parameter, we can choose different methods to estimate volatility , to be implemented match case statement 
     
+     # add an parameter here to allow user to provide his data
+    
+    dzienne_zwroty_log = data.query('TIME >= 90000 and TIME <= 165000') # to be removed  
+    # pierwszy OPEN w dniu
+    daily_open = dzienne_zwroty_log.groupby('DATE')['OPEN'].first()
+
+    # ostatni CLOSE w dniu
+    daily_close = dzienne_zwroty_log.groupby('DATE')['CLOSE'].last()
+
+    # dzienne log-stopy (open → close)
+    log_return_daily = np.log(daily_close) - np.log(daily_open)
+
+    
+    match vol_estimation:
+        case "variance":
+            # odchylenie standardowe
+            std_daily = log_return_daily.var(ddof=1) # nie std ale var
+
+        case "garch":
+            pass
+        case "egarch":
+            pass
+        case "aparch":
+            pass
+        case _:
+            raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
+            
+
     sigma_hat = std_daily # 13110
 
-    data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean")
+    data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
 
     returns_centered = data['log_return_intraday'] - data["R_bar_n"]
 
@@ -106,15 +122,13 @@ def flexible_fourier_form(
         bic_list.append([model.bic,x])
         
     
-    
     match max_lags_kernel:
         case "bartlett":
             kernel = int( 4*(binary_df.shape[0]/100)**(2/9)  ) 
         case "other":
-            pass
+            pass # to be added
         case _:
             raise Exception("Invalid max_lags_kernel parameter. Choose from 'bartlett' or 'other'.") # initial idea 
-    
     
     
     model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel })
@@ -136,37 +150,11 @@ def flexible_fourier_form(
     binary_df.groupby('sesja')['s_hat'].mean().plot()
     
     plt.show()
-
-    return [model2.summary(), binary_df]
     
-    """    
-    match vol_estimation:
-        case "variance":
-            
-            dzienne_zwroty_log = data.query('TIME >= 90000 and TIME <= 165000') # to be moved  
-            # pierwszy OPEN w dniu
-            daily_open = dzienne_zwroty_log.groupby('DATE')['OPEN'].first()
-
-            # ostatni CLOSE w dniu
-            daily_close = dzienne_zwroty_log.groupby('DATE')['CLOSE'].last()
-
-            # dzienne log-stopy (open → close)
-            log_return_daily = np.log(daily_close) - np.log(daily_open)
-
-            # odchylenie standardowe
-            std_daily = log_return_daily.var(ddof=1) # nie std ale var
-
-            pass
-        case "garch":
-            pass
-        case "egarch":
-            pass
-        case "aparch":
-            pass
-        case _:
-            raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
-            
-    """ 
+   
+    """ """    
+    
+    return [model2.summary(), binary_df]
         
         
         
