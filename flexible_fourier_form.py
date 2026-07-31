@@ -12,9 +12,9 @@ def flexible_fourier_form(
     data: pd.DataFrame, 
     criteria: str, 
     vol_estimation: str, 
-    days: list, 
     plots: bool,
     session_thresholds:list, 
+    days: list= [], 
     max_lags_kernel :str='bartlett',
     N: int = None,
     verbose:bool=False)->Tuple:
@@ -30,7 +30,10 @@ def flexible_fourier_form(
     
     """
     
-    data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}') # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
+    MAX_PAIRS = 13 # param to be changed to allow user to choose the number of pairs of sin and cos to be used in the model
+    
+    
+    data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}').copy() # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
     # log stopy zwrotu w obrębie dnia
     data['log_return_intraday'] = ( data.groupby('DATE')['CLOSE'].transform(lambda x: np.log(x).diff()))
@@ -39,8 +42,6 @@ def flexible_fourier_form(
 
     data['DATE'] =pd.to_datetime(data['DATE'],format='%Y%m%d')
         
-    data['dni_tygodnia'] =data['DATE'].dt.day_name()
-    
     # variables computation        
 
     N = 92 # ilosc 
@@ -76,7 +77,8 @@ def flexible_fourier_form(
                                    vol='GARCH', 
                                    dist='t',
                                    p=1, 
-                                   q=1
+                                   q=1,
+                                   rescale=True
                                    ).fit(disp="off").conditional_volatility.to_dict()
             
             data["sigma_hat"] = data["DATE"].map(std_daily)
@@ -88,7 +90,8 @@ def flexible_fourier_form(
                                         dist='t',
                                         p=1,
                                         o=1, 
-                                        q=1
+                                        q=1,
+                                        rescale=True
                                         ).fit(disp="off").conditional_volatility.to_dict()
                 
             data["sigma_hat"] = data["DATE"].map(std_daily)
@@ -115,18 +118,19 @@ def flexible_fourier_form(
     
     data['y'] = response
     
-  
+    for p in range(1,MAX_PAIRS):
+        data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
+        data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
+                
     
-    binary_df = pd.concat([pd.get_dummies(data['DATE'].dt.day_name(),columns=['DATE']),data],axis=1)
-    
-    binary_df.loc[:,['Monday','Tuesday','Wednesday','Thursday','Friday']] = binary_df.loc[:,['Monday','Tuesday','Wednesday','Thursday','Friday']].astype(int)
+    binary_df = pd.concat([
+        pd.get_dummies( data["DATE"].dt.day_name(), dtype=int), data],axis=1)
     
     # choose appropriate criteria to find optimal pair of sin and cos 
     aic_list = []
     bic_list = []
 
-    for p in range(1,11):
-        x=p
+    for p in range(1,MAX_PAIRS):
         expression = f"y~linear+qube+Wednesday+Monday+Thursday+Tuesday+"
         while p >0:
             expression+= f"sin_{p}"+"+"+f"cosine_{p}+"
@@ -153,10 +157,7 @@ def flexible_fourier_form(
     else :
         raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
     
-    for p in range(1,optimal_pair+1):
-        data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
-        data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
-            
+   
     # HERE SHOULD BE ADDED THE LOOP WHICH CREATES SIN AND COS  
     
     match max_lags_kernel:
@@ -167,8 +168,14 @@ def flexible_fourier_form(
         case _:
             raise Exception("Invalid max_lags_kernel parameter. Choose from 'bartlett' or 'other'.") # initial idea 
     
+    expression_model = f"y~linear+qube+sin_1+cosine_1+" 
+
     
-    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday ",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel })
+    if not days:
+        expression_model_2 = expression_model+f"{days[0]}+{days[1]}+{days[2]}+{days[3]}"
+    
+    
+    model2 = ols("y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday",data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel })
     
     binary_df['estimated_var'] =model2.fittedvalues
 
