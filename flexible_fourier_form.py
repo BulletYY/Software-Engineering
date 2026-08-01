@@ -130,9 +130,6 @@ def flexible_fourier_form(
     aic_list = []
     bic_list = []
     
-    
-   
-    
 
     for p in range(1,MAX_PAIRS):
         
