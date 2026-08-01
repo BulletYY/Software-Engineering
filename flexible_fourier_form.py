@@ -66,12 +66,13 @@ def flexible_fourier_form(
     
     match vol_estimation:
         case "variance":
-            # odchylenie standardowe
-            std_daily = log_return_daily.var(ddof=1) # nie std ale var
+            
+            std_daily = log_return_daily.std(ddof=1) # nie std ale var
             
             data['sigma_hat']= std_daily
 
         case "garch":
+            
             std_daily = arch_model(log_return_daily, 
                                    vol='GARCH', 
                                    dist='t',
