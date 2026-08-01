@@ -1,6 +1,6 @@
 # Flexible Fourier Form
 
-An experimental Python implementation of the **Flexible Fourier Form (FFF)** for modelling intraday periodicity in financial-market volatility.
+An Python implementation of the **Flexible Fourier Form (FFF)** for modelling intraday periodicity in financial-market volatility.
 
 The project follows the approach described in:
 
