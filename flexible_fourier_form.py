@@ -52,14 +52,11 @@ def flexible_fourier_form(
         
     # here based on the vol_estimation parameter, we can choose different methods to estimate volatility , to be implemented match case statement 
     
-     # add an parameter here to allow user to provide his data
-    
-    dzienne_zwroty_log = data.query('TIME >= 90000 and TIME <= 165000') # to be removed  
-    # pierwszy OPEN w dniu
-    daily_open = dzienne_zwroty_log.groupby('DATE')['OPEN'].first()
+    # first open value in the day
+    daily_open = data.groupby('DATE')['OPEN'].first()
 
-    # ostatni CLOSE w dniu
-    daily_close = dzienne_zwroty_log.groupby('DATE')['CLOSE'].last()
+    # last close value in the day
+    daily_close = data.groupby('DATE')['CLOSE'].last()
 
     # dzienne log-stopy (open → close)
     log_return_daily = np.log(daily_close) - np.log(daily_open)
