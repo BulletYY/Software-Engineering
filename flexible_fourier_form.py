@@ -102,7 +102,7 @@ def flexible_fourier_form(
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
             
 
-    data["R_bar_n"] = data.groupby("sesja")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
+    data["R_bar_n"] = data.groupby("session")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
 
     returns_centered = data['log_return_intraday'] - data["R_bar_n"]
 
@@ -204,7 +204,7 @@ def flexible_fourier_form(
     
     if plots:
         
-        binary_df.groupby('sesja')['s_hat'].mean().plot()
+        binary_df.groupby('session')['s_hat'].mean().plot()
         
         plt.show()
         
