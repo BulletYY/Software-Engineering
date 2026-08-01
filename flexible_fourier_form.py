@@ -12,8 +12,8 @@ def flexible_fourier_form(
     data: pd.DataFrame, 
     criteria: str, 
     vol_estimation: str, 
-    plots: bool,
     session_thresholds:list, 
+    plots: bool =True,
     days: list= [], 
     max_lags_kernel :str='bartlett',
     N: int = None,
@@ -61,6 +61,8 @@ def flexible_fourier_form(
     # dzienne log-stopy (open → close)
     log_return_daily = np.log(daily_close) - np.log(daily_open)
 
+    
+    # choose appropriate method to estimate volatility based on the vol_estimation parameter
     
     match vol_estimation:
         case "variance":
@@ -165,11 +167,15 @@ def flexible_fourier_form(
         case _:
             raise Exception("Invalid max_lags_kernel parameter. Choose from 'bartlett' or 'other'.") # initial idea 
     
-    expression_model = f"y~linear+qube+sin_1+cosine_1+" 
+    expression_model = f"y~linear+qube+" # sin_1+cosine_1+ 
 
     
     if days:
         expression_model += f"{days[0]} + {days[1]} + {days[2]} + {days[3]}"
+        
+    
+    for pair in range(1, optimal_pair+1):
+        expression_model += f"+sin_{pair}+cosine_{pair}"
     
     
     model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
@@ -188,11 +194,13 @@ def flexible_fourier_form(
 
     binary_df['deseasonalised_binary'] = binary_df['log_return_intraday'] / binary_df['s_hat']
     
-    binary_df.groupby('sesja')['s_hat'].mean().plot()
-    
-    plt.show()
-    
-    
+    if plots:
+        
+        binary_df.groupby('sesja')['s_hat'].mean().plot()
+        
+        plt.show()
+        
+        
     
     
     return [model2.summary(), binary_df]
