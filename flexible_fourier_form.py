@@ -113,7 +113,7 @@ def flexible_fourier_form(
     
     data['linear'] = data['n'] / N_1 # trend liniiowy
 
-    data['qube'] = data['n^2'] / N_2 # trend kwadratowy  
+    data['cube'] = data['n^2'] / N_2 # trend kwadratowy  
     
     data['y'] = response
     
@@ -128,9 +128,19 @@ def flexible_fourier_form(
     # choose appropriate criteria to find optimal pair of sin and cos 
     aic_list = []
     bic_list = []
+    
+    
+   
+    
 
     for p in range(1,MAX_PAIRS):
-        expression = f"y~linear+qube+Wednesday+Monday+Thursday+Tuesday+"
+        
+        expression = f"y~linear+cube+"
+        
+        if days:
+            expression += " + ".join(days) + "+"
+
+        
         while p >0:
             expression+= f"sin_{p}"+"+"+f"cosine_{p}+"
             p-=1
@@ -167,18 +177,18 @@ def flexible_fourier_form(
         case _:
             raise Exception("Invalid max_lags_kernel parameter. Choose from 'bartlett' or 'other'.") # initial idea 
     
-    expression_model = f"y~linear+qube+" # sin_1+cosine_1+ 
+    expression_model = f"y~linear+cube+" # sin_1+cosine_1+ 
 
     
     if days:
-        expression_model += f"{days[0]} + {days[1]} + {days[2]} + {days[3]}"
+        expression_model += " + ".join(days)
         
     
     for pair in range(1, optimal_pair+1):
         expression_model += f"+sin_{pair}+cosine_{pair}"
     
     
-    model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+qube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
+    model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+cube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
     
     binary_df['estimated_var'] =model2.fittedvalues
 
