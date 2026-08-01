@@ -208,14 +208,6 @@ def flexible_fourier_form(
         
         plt.show()
         
-        
     
     
     return [model2.summary(), binary_df]
-        
-        
-        
-            
-        
-
-
