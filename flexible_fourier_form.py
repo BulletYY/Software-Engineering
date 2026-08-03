@@ -145,20 +145,19 @@ def flexible_fourier_form(
         aic_list.append(model.aic)
         bic_list.append(model.bic)
         
-    print("\n")
-    print("---"*60)
-    print("AIC list:", aic_list.index(min(aic_list))+1)
-    print("BIC list:", bic_list.index(min(bic_list))+1)
-    print("---"*60)
-    
+        # to be added verbose to highlight the estimation process. (aic values bic etc)
+        
     match criteria:
         case "AIC":
             optimal_pair = aic_list.index(min(aic_list))+1
+            print("AIC optimal pair", optimal_pair)
+
         case "BIC" :  
             optimal_pair = bic_list.index(min(bic_list))+1
+            print("BIC optimal pair", optimal_pair)
+
         case _:
             raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
-    
    
     match max_lags_kernel:
         case "bartlett":
@@ -174,10 +173,8 @@ def flexible_fourier_form(
     if days:
         expression_model += " + ".join(days)
         
-    
     for pair in range(1, optimal_pair+1):
         expression_model += f"+sin_{pair}+cosine_{pair}"
-    
     
     model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+cube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
     
