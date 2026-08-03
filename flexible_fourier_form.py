@@ -30,19 +30,19 @@ def flexible_fourier_form(
     
     """
     
-    MAX_PAIRS = 13 # param to be changed . It allows user to choose the maximum number of pairs of the  sin and cos in the simulation. 
+    MAX_PAIRS = 13 # Hardcoded param which allows user to choose the maximum number of the sin and cos in the simulation. 
     
     
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}').copy() # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
-    # log stopy zwrotu w obrębie dnia
+    # compute daily returns 
     data['log_return_intraday'] = ( data.groupby('DATE')['CLOSE'].transform(lambda x: np.log(x).diff()))
 
     data = data.dropna(subset=['log_return_intraday'])
 
     data['DATE'] =pd.to_datetime(data['DATE'],format='%Y%m%d')
         
-    # variables computation        
+    # repsonse and explanatory variables computation        
 
     N = 92 # ilosc 
 
@@ -50,24 +50,21 @@ def flexible_fourier_form(
 
     N_2 = (N + 1) * (2*N + 1) / 6  # or (N+1)*(N+2)/6  
         
-    # here based on the vol_estimation parameter, we can choose different methods to estimate volatility , to be implemented match case statement 
-    
     # first open value in the day
     daily_open = data.groupby('DATE')['OPEN'].first()
 
     # last close value in the day
     daily_close = data.groupby('DATE')['CLOSE'].last()
 
-    # dzienne log-stopy (open → close)
+    # daily returns 
     log_return_daily = np.log(daily_close) - np.log(daily_open)
-
     
     # choose appropriate method to estimate volatility based on the vol_estimation parameter
     
     match vol_estimation:
         case "variance":
             
-            std_daily = log_return_daily.std(ddof=1) # nie std ale var
+            std_daily = log_return_daily.std(ddof=1)
             
             data['sigma_hat']= std_daily
 
