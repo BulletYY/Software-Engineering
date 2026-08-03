@@ -16,7 +16,7 @@ fdt['session'] = pd.to_datetime(fdt['TIME'].astype(
     str).str.zfill(6), format='%H%M%S').dt.time
 
 
-zwrotka, df = flexible_fourier_form( fdt, "BIC", vol_estimation="egarch", days=['Wednesday','Monday','Thursday','Tuesday'], plots=True, session_thresholds=['90000', '165000'],max_lags_kernel='bartlett')
+zwrotka, df = flexible_fourier_form( fdt, "BIC", vol_estimation="egarch", days=['Wednesday','Monday','Thursday','Tuesday'], plots=True, session_thresholds=['90000', '165000'],max_lags_kernel='bartlett',verbose=False)
 
 
 print(zwrotka)

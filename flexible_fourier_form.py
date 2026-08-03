@@ -5,6 +5,7 @@ from statsmodels.formula.api import ols
 from math import pi
 import matplotlib.pyplot as plt
 from arch import arch_model
+import logging
 
 
 def flexible_fourier_form(
@@ -30,7 +31,13 @@ def flexible_fourier_form(
     """
     
     MAX_PAIRS = 13 # Hardcoded param which allows user to choose the maximum number of the sin and cos in the simulation. 
+
     
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
+
+    
+    logging.info("Begin............")
     
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}').copy() # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
 
@@ -59,6 +66,8 @@ def flexible_fourier_form(
     log_return_daily = np.log(daily_close) - np.log(daily_open)
     
     # choose appropriate method to estimate volatility based on the vol_estimation parameter
+    
+    logging.info("variables prepared............")
     
     match vol_estimation:
         case "variance":
@@ -97,6 +106,8 @@ def flexible_fourier_form(
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
             
+    logging.info("daily volatility computed.............")
+
 
     data["R_bar_n"] = data.groupby("session")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
 
@@ -117,8 +128,8 @@ def flexible_fourier_form(
     for p in range(1,MAX_PAIRS):
         data[f'sin_{p}'] = np.sin(2*pi*p*data['n']/N) 
         data[f'cosine_{p}'] = np.cos(2*pi*p*data['n']/N) 
+        
                 
-    
     binary_df = pd.concat([
         pd.get_dummies( data["DATE"].dt.day_name(), dtype=int), data],axis=1)
     
@@ -126,7 +137,10 @@ def flexible_fourier_form(
     aic_list = []
     bic_list = []
     
-
+    logging.info("finding optimal pairs..............")
+    
+    print("\n")
+    
     for p in range(1,MAX_PAIRS):
         
         expression = f"y~linear+cube+"
@@ -134,30 +148,47 @@ def flexible_fourier_form(
         if days:
             expression += " + ".join(days) + "+"
 
-        
         while p >0:
+            
+            
+
             expression+= f"sin_{p}"+"+"+f"cosine_{p}+"
             p-=1
+            
+        logging.info(f"{expression}")
+
+            
 
         expression =expression.rstrip("+")
 
         model = ols(expression,data=binary_df).fit()
-        aic_list.append(model.aic)
-        bic_list.append(model.bic)
+        aic_list.append(float(model.aic))
+        bic_list.append(float(model.bic))
         
         # to be added verbose to highlight the estimation process. (aic values bic etc)
-        
+    
+    print("\n")
+    
+    logging.info(f" AIC : {aic_list}.........................")
+    
+    logging.info(f" BIC : {bic_list}.........................")
+   
+    print("\n") 
+    
     match criteria:
         case "AIC":
             optimal_pair = aic_list.index(min(aic_list))+1
-            print("AIC optimal pair", optimal_pair)
+            logging.info(f" AIC optimal pair {optimal_pair}................")
 
         case "BIC" :  
             optimal_pair = bic_list.index(min(bic_list))+1
-            print("BIC optimal pair", optimal_pair)
+            logging.info(f" BIC optimal pair {optimal_pair}...................")
 
         case _:
             raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
+   
+   
+    logging.info(f" optimal lags chosen based on {criteria}.........................")
    
     match max_lags_kernel:
         case "bartlett":
@@ -169,6 +200,8 @@ def flexible_fourier_form(
     
     expression_model = f"y~linear+cube+" # sin_1+cosine_1+ 
 
+    logging.info(f" kernel {max_lags_kernel}................")
+
     
     if days:
         expression_model += " + ".join(days)
@@ -177,6 +210,8 @@ def flexible_fourier_form(
         expression_model += f"+sin_{pair}+cosine_{pair}"
     
     model2 = ols(expression_model,data=binary_df).fit( cov_type="HAC",cov_kwds={"maxlags": kernel }) # "y~linear+cube+sin_1+cosine_1+Wednesday+Monday+Thursday+Tuesday"
+    
+    logging.info(f" estimated model {expression_model}................")
     
     binary_df['estimated_var'] =model2.fittedvalues
 
