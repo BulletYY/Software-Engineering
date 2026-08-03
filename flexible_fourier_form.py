@@ -151,9 +151,6 @@ def flexible_fourier_form(
     print("AIC list:", aic_list.index(min(aic_list))+1)
     print("BIC list:", bic_list.index(min(bic_list))+1)
     print("---"*60)
-    print("\n")
-    
-    
     
     match criteria:
         case "AIC":
@@ -164,8 +161,6 @@ def flexible_fourier_form(
             raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
     
    
-    # HERE SHOULD BE ADDED THE LOOP WHICH CREATES SIN AND COS  
-    
     match max_lags_kernel:
         case "bartlett":
             kernel = int( 4*(binary_df.shape[0]/100)**(2/9)  ) 
