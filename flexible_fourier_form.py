@@ -30,7 +30,7 @@ def flexible_fourier_form(
     
     """
     
-    MAX_PAIRS = 13 # param to be changed to allow user to choose the number of pairs of sin and cos to be used in the model
+    MAX_PAIRS = 13 # param to be changed . It allows user to choose the maximum number of pairs of the  sin and cos in the simulation. 
     
     
     data = data.query(f'TIME >= {session_thresholds[0]} and TIME <= {session_thresholds[1]}').copy() # wziąłem 9:00 do 16:50 dla starego kodu , Czy Wyrzucac dogrywke czy nie 
@@ -157,12 +157,14 @@ def flexible_fourier_form(
     print("\n")
     
     
-    if criteria == "AIC":
-        optimal_pair = aic_list.index(min(aic_list))+1 
-    elif criteria == "BIC":
-        optimal_pair = bic_list.index(min(bic_list))+1
-    else :
-        raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
+    
+    match criteria:
+        case "AIC":
+            optimal_pair = aic_list.index(min(aic_list))+1
+        case "BIC" :  
+            optimal_pair = bic_list.index(min(bic_list))+1
+        case _:
+            raise Exception("Invalid criteria parameter. Choose from 'AIC' or 'BIC'.") # initial idea
     
    
     # HERE SHOULD BE ADDED THE LOOP WHICH CREATES SIN AND COS  
@@ -190,7 +192,7 @@ def flexible_fourier_form(
     
     binary_df['estimated_var'] =model2.fittedvalues
 
-    # normalization of the estimated seasonality of variance to get the seasonal component
+    # normalization of the estimated seasonality of variance to estimate the seasonal component.
     
     g = np.exp(binary_df['estimated_var'] / 2)
 
