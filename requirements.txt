@@ -5,3 +5,4 @@ statsmodels>=0.14.5
 math
 matplotlib.pyplot
 arch
+typing
