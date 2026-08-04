@@ -102,7 +102,16 @@ def flexible_fourier_form(
             data["sigma_hat"] = data["DATE"].map(std_daily)
     
         case "aparch": # and other models to be aded 
-            pass
+            std_daily = arch_model(log_return_daily, 
+                                                    vol='APARCH', 
+                                                    dist='t',
+                                                    p=1,
+                                                    o=1, 
+                                                    q=1,
+                                                    rescale=True
+                                                    ).fit(disp="off").conditional_volatility.to_dict()
+        
+        
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
             
