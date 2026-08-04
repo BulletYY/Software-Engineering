@@ -109,7 +109,7 @@ def flexible_fourier_form(
     logging.info("daily volatility computed.............")
 
 
-    data["R_bar_n"] = data.groupby("session")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()   or assuming constant mean within session
+    data["R_bar_n"] = data.groupby("session")["log_return_intraday"].transform("mean") # R_bar = data['log_return_intraday'].mean()  or assuming constant mean within session
 
     returns_centered = data['log_return_intraday'] - data["R_bar_n"]
 
@@ -119,9 +119,9 @@ def flexible_fourier_form(
     
     data['n^2'] = data['n'] **2
     
-    data['linear'] = data['n'] / N_1 # trend liniiowy
+    data['linear'] = data['n'] / N_1 # linear trend
 
-    data['cube'] = data['n^2'] / N_2 # trend kwadratowy  
+    data['cube'] = data['n^2'] / N_2 # quadriatic trend   
     
     data['y'] = response
     
