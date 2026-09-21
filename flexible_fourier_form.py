@@ -30,7 +30,7 @@ def flexible_fourier_form(
     
     """
     
-    MAX_PAIRS = 13 # Hardcoded param which allows user to choose the maximum number of the sin and cos in the simulation. 
+    MAX_PAIRS = 13 # Hardcoded param , allows user to choose the maximum number of the sin and cos during the simulation. 
 
     
     if verbose:
@@ -110,7 +110,6 @@ def flexible_fourier_form(
                                                     q=1,
                                                     rescale=True
                                                     ).fit(disp="off").conditional_volatility.to_dict()
-        
         
         case _:
             raise Exception("Invalid vol_estimation parameter. Choose from 'variance', 'garch', 'egarch', or 'aparch'.") 
